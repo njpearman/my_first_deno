@@ -1,11 +1,16 @@
 const NEW_LINE_AS_BYTE = new TextEncoder().encode("\n")[0];
 
-class InputEnd {
-  constructor(public finalInput: string) {
+class Input {
+  constructor(readonly fragment: string) {
   }
 }
 
-type ReadResult = string | InputEnd;
+class InputEnd {
+  constructor(readonly fragment: string = "") {
+  }
+}
+
+type ReadResult = Input | InputEnd;
 
 /**
  * My first Deno class!
@@ -27,7 +32,7 @@ class BreakfastReader {
                                              // number of bytes read afterwards
     if(readCount === null || readCount === 0) {
       // No bytes were read, so break from the loop
-      return "";
+      return new InputEnd();
     }
 
     const indexOfNewLine = buffer.indexOf(NEW_LINE_AS_BYTE);
@@ -35,7 +40,7 @@ class BreakfastReader {
     if (indexOfNewLine > -1) {
       return new InputEnd(this.#decoder.decode(buffer.slice(0, indexOfNewLine)));
     } else {
-      return this.#decoder.decode(buffer);
+      return new Input(this.#decoder.decode(buffer));
     }
   }
 
@@ -50,11 +55,10 @@ class BreakfastReader {
 
     while (true) {
       const result = await this.bufferInputStream(inStream, 20)
+      breakfast.push(result.fragment); 
+
       if (result instanceof InputEnd) {
-        breakfast.push(result.finalInput);
         break;
-      } else {
-        breakfast.push(result); 
       }
     }
 
