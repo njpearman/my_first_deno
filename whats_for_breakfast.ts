@@ -1,10 +1,10 @@
 /**
- * This function is lifted from https://deno.land/x/get_stdin/mod.ts / https://github.com/rjoydip/get_stdin/blob/master/mod.ts
+ * This function started off as the `getStdin() method from https://deno.land/x/get_stdin/mod.ts / https://github.com/rjoydip/get_stdin/blob/master/mod.ts
  * I'm using it as the basis for learning a bit about using stdin and streams in Deno, and to help me better understand
  * `async` / `await` usage.
  **/
 async function getBreakfast(): Promise<string> {
-  let breakfast = "";
+  let breakfast = [];
 
   const inStream = Deno.stdin; // the input stream, stdin
   const decoder = new TextDecoder();
@@ -27,13 +27,13 @@ async function getBreakfast(): Promise<string> {
 
     if (indexOfNewLine > -1) {
       inputting = false;
-      breakfast += decoder.decode(buffer.slice(0, indexOfNewLine));
+      breakfast.push(decoder.decode(buffer.slice(0, indexOfNewLine)));
     } else {
-      breakfast += decoder.decode(buffer);
+      breakfast.push(decoder.decode(buffer));
     }
   }
 
-  return breakfast
+  return breakfast.join('');
 }
 
 console.log("What's for breakfast?");
