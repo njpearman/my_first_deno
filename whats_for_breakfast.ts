@@ -16,7 +16,7 @@ class BreakfastReader {
    * specified number of bytes from the provided stream.
    **/
   async bufferInputStream(inStream: Deno.Reader, bufferSize: number): Promise<string> {
-    const buffer = new Uint8Array(20); // Array of unsigned 8 bit integers. But why 20?
+    const buffer = new Uint8Array(bufferSize); // Array of unsigned 8 bit integers. But why 20?
     const readCount = await inStream.read(buffer); // Read from stdin into the buffer asynchronously, recording the 
                                              // number of bytes read afterwards
     if(readCount === null || readCount === 0) {
