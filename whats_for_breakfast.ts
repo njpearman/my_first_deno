@@ -3,7 +3,7 @@
  * I'm using it as the basis for learning a bit about using stdin and streams in Deno, and to help me better understand
  * `async` / `await` usage.
  **/
-async function getBreakfast() {
+async function getBreakfast(): Promise<string> {
   let breakfast = "";
 
   const inStream = Deno.stdin; // the input stream, stdin
