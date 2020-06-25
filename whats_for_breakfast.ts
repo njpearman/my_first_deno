@@ -10,28 +10,26 @@ async function getBreakfast() {
   const decoder = new TextDecoder();
   let readCount: number | null = null; // number or null, in order to keep track of bytes read
 
-  const newLineAsByte = new TextEncoder().encode("\n");
+  const newLineAsByte = new TextEncoder().encode("\n")[0];
 
-  let inputting = true;
+  let inputting = true; // New line is considered the end of input in this routine
 
   while(inputting) {
     const buffer = new Uint8Array(20); // Array of unsigned 8 bit integers. But why 20?
     readCount = await inStream.read(buffer); // Read from stdin into the buffer asynchronously, recording the 
                                              // number of bytes read afterwards
     if(readCount === null || readCount === 0) {
-      // no bytes were read, so break from the loop
+      // No bytes were read, so break from the loop
       break;
     }
 
-    const indexOfNewLine = buffer.indexOf(newLineAsByte[0]);
+    const indexOfNewLine = buffer.indexOf(newLineAsByte);
 
     if (indexOfNewLine > -1) {
       inputting = false;
-      const bufferedInputFragment = decoder.decode(buffer.slice(0, indexOfNewLine));
-      breakfast += bufferedInputFragment;
+      breakfast += decoder.decode(buffer.slice(0, indexOfNewLine));
     } else {
-      const bufferedInputFragment = decoder.decode(buffer);
-      breakfast += bufferedInputFragment;
+      breakfast += decoder.decode(buffer);
     }
   }
 
