@@ -37,16 +37,7 @@ async function createFileWithPath(itemName: string, fileWithPath: string, conten
 async function initDocker() {
   for await (const item of Deno.readDir(".")) {
     createFileWithPath(item.name, `./${dockerFile}`, "")
-
-    // check if docker-compose.yml exists
-    if (item.name === dockerComposeFile) {
-      console.log("Found existing docker-compose.yml");
-      // halt if found?
-    } else {
-      // create docker-compose.yml
-      const contents = encoder.encode("");
-      await Deno.writeFile(`./${dockerComposeFile}`, contents);
-    }
+    createFileWithPath(item.name, `./${dockerComposeFile}`, "")
 
     // check if .env/development/ exists
     if (item.name === envFolder) {
