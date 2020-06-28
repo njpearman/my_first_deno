@@ -19,25 +19,31 @@ const dockerComposeFile = "docker-compose.yml";
 const envFolder = ".env";
 const encoder = new TextEncoder();
 
-async function createFileWithPath(itemName: string, fileWithPath: string, contents: string) {
+async function createFileWithPath(item: Deno.DirEntry, fileWithPath: string, contents: string) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
 
-  if (itemName === filename) {
+  // handle a nested path here.
+  //   abort on `../`?
+  //   abort on `/ ...`?
+
+  if (item.name === filename && !item.isFile) {
+    console.log(`Expected ${fileWithPath} to be a file; found a directory`);
+  } else if (item.name === filename) {
     console.log(`Found existing ${filename}`);
     // halt if found?
   } else {
     // create Dockerfile
-    const contents = encoder.encode("");
-    await Deno.writeFile(`${filepath}${filename}`, contents);
+    const encodedContents = encoder.encode(contents);
+    await Deno.writeFile(`${filepath}${filename}`, encodedContents);
   }
 }
 
 async function initDocker() {
   for await (const item of Deno.readDir(".")) {
-    createFileWithPath(item.name, `./${dockerFile}`, "")
-    createFileWithPath(item.name, `./${dockerComposeFile}`, "")
+    createFileWithPath(item, `./${dockerFile}`, "")
+    createFileWithPath(item, `./${dockerComposeFile}`, "")
 
     // check if .env/development/ exists
     if (item.name === envFolder) {
