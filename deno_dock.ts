@@ -38,13 +38,17 @@ async function createFileWithPath(fileWithPath: string, contents: string) {
       }
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) {
-        // make the directory!
-        await Deno.mkdir(filepath, { recursive: true })
-        // does not handle things going wrong...
+        try {
+          // make the directory!
+          await Deno.mkdir(filepath, { recursive: true })
+        } catch (err) {
+          console.log(`Unable to create directory ${filepath}`);
+          throw err;
+        }
+      } else {
+        // bad things happened
+        throw err;
       }
-
-      // bad things happened
-      throw err;
     }
   }
 
