@@ -16,18 +16,37 @@
 
 const dockerFile = "Dockerfile";
 const dockerComposeFile = "docker-compose.yml";
-const envFolder = ".env";
+const appDevelopmentEnvFile = ".env/development/app";
 const encoder = new TextEncoder();
-
 
 async function createFileWithPath(fileWithPath: string, contents: string) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
 
-  // handle a nested path here.
   //   abort on `../`?
   //   abort on `/ ...`?
+ 
+  // This is hardcoded for nixy paths and needs to be made more cleverer.
+  if (filepath.length > 0 && filepath !== "./") {
+    try {
+      const info = Deno.lstat(filepath);
+
+      if (!(await info).isDirectory) {
+        // we have a problem
+        throw new Error(`Expected ${filepath} to be a directory`); 
+      }
+    } catch (err) {
+      if (err instanceof Deno.errors.NotFound) {
+        // make the directory!
+        await Deno.mkdir(filepath, { recursive: true })
+        // does not handle things going wrong...
+      }
+
+      // bad things happened
+      throw err;
+    }
+  }
 
   /**
    * Essentially a modified copy of
@@ -37,6 +56,8 @@ async function createFileWithPath(fileWithPath: string, contents: string) {
    * understand or implement.
    */
   try {
+    // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than 
+    // the symlink itself
     const fileInfo = await Deno.lstat(fileWithPath);
 
     if (!fileInfo.isFile) {
@@ -59,6 +80,7 @@ async function createFileWithPath(fileWithPath: string, contents: string) {
 async function initDocker() {
   createFileWithPath(`./${dockerFile}`, "")
   createFileWithPath(`./${dockerComposeFile}`, "")
+  createFileWithPath(`./${appDevelopmentEnvFile}`, "")
 
   // check if .env/development/ exists
     // halt if found?
