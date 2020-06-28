@@ -19,7 +19,8 @@ const dockerComposeFile = "docker-compose.yml";
 const envFolder = ".env";
 const encoder = new TextEncoder();
 
-async function createFileWithPath(item: Deno.DirEntry, fileWithPath: string, contents: string) {
+
+async function createFileWithPath(fileWithPath: string, contents: string) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
@@ -28,34 +29,43 @@ async function createFileWithPath(item: Deno.DirEntry, fileWithPath: string, con
   //   abort on `../`?
   //   abort on `/ ...`?
 
-  if (item.name === filename && !item.isFile) {
-    console.log(`Expected ${fileWithPath} to be a file; found a directory`);
-  } else if (item.name === filename) {
-    console.log(`Found existing ${filename}`);
-    // halt if found?
-  } else {
-    // create Dockerfile
-    const encodedContents = encoder.encode(contents);
-    await Deno.writeFile(`${filepath}${filename}`, encodedContents);
+  /**
+   * Essentially a modified copy of
+   * [std/fs/exists.ts](https://github.com/denoland/deno/blob/v1.1.2/std/fs/exists.ts).
+   * I'm using my own implementation because, at the time of writing, I'd prefer to have control over any 
+   * specifics I might need rather than importing a small function that might make things harder for me to
+   * understand or implement.
+   */
+  try {
+    const fileInfo = await Deno.lstat(fileWithPath);
+
+    if (!fileInfo.isFile) {
+      console.log(`Expected ${fileWithPath} to be a file; found a directory`);
+    } else {
+      console.log(`Found existing ${filename}`);
+      // halt if found?
+    }
+  } catch(err) {
+    if (err instanceof Deno.errors.NotFound) {
+      // we create the file
+      const encodedContents = encoder.encode(contents);
+      await Deno.writeFile(`${filepath}${filename}`, encodedContents);
+    } else {
+      // something strange happened
+    }
   }
 }
 
 async function initDocker() {
-  for await (const item of Deno.readDir(".")) {
-    createFileWithPath(item, `./${dockerFile}`, "")
-    createFileWithPath(item, `./${dockerComposeFile}`, "")
+  createFileWithPath(`./${dockerFile}`, "")
+  createFileWithPath(`./${dockerComposeFile}`, "")
 
-    // check if .env/development/ exists
-    if (item.name === envFolder) {
-      console.log("Found existing .env/");
-      // halt if found?
-    } else {
-      // create .env/
-    }
-    // check if .env/development/app exists
+  // check if .env/development/ exists
     // halt if found?
-    // create empty .env/development/app
-  }
+    // create .env/
+  // check if .env/development/app exists
+  // halt if found?
+  // create empty .env/development/app
 }
 
 initDocker();
