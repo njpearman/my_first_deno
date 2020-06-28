@@ -28,7 +28,7 @@ async function initDocker() {
     } else {
       // create Dockerfile
       const contents = encoder.encode("");
-      await Deno.writeFile("./Dockerfile", contents);
+      await Deno.writeFile(`./${dockerFile}`, contents);
     }
 
     // check if docker-compose.yml exists
@@ -37,6 +37,8 @@ async function initDocker() {
       // halt if found?
     } else {
       // create docker-compose.yml
+      const contents = encoder.encode("");
+      await Deno.writeFile(`./${dockerComposeFile}`, contents);
     }
 
     // check if .env/development/ exists
