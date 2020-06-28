@@ -14,9 +14,9 @@
  * Let's start with that.
  **/
 
-const dockerFile = "Dockerfile";
-const dockerComposeFile = "docker-compose.yml";
-const appDevelopmentEnvFile = ".env/development/app";
+const dockerFile = "./Dockerfile";
+const dockerComposeFile = "./docker-compose.yml";
+const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
 
 async function createFileWithPath(fileWithPath: string, contents: string) {
@@ -82,16 +82,31 @@ async function createFileWithPath(fileWithPath: string, contents: string) {
 }
 
 async function initDocker() {
-  createFileWithPath(`./${dockerFile}`, "")
-  createFileWithPath(`./${dockerComposeFile}`, "")
-  createFileWithPath(`./${appDevelopmentEnvFile}`, "")
 
-  // check if .env/development/ exists
-    // halt if found?
-    // create .env/
-  // check if .env/development/app exists
-  // halt if found?
-  // create empty .env/development/app
+  // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
+  // that this is the way to do it.
+  
+  const files = {
+    fileList: [dockerFile, dockerComposeFile, appDevelopmentEnvFile],
+    [Symbol.asyncIterator]() {
+      return {
+        filesLeft: [...this.fileList],
+        async next() {
+          const currentFile = this.filesLeft.pop();
+          if(currentFile) {
+            await createFileWithPath(currentFile, "");
+            return { done: false, value: currentFile };
+          } else {
+            return { done: true };
+          }
+        }
+      };
+    }
+  };
+  
+  for await (let file of files) {
+    console.log(`Worked ${file}`);
+  }
 }
 
 initDocker();
