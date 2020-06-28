@@ -19,17 +19,24 @@ const dockerComposeFile = "docker-compose.yml";
 const envFolder = ".env";
 const encoder = new TextEncoder();
 
+async function createFileWithPath(itemName: string, fileWithPath: string, contents: string) {
+  const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
+  const filename = fileWithPath.slice(filenameStartIndex);
+  const filepath = fileWithPath.slice(0, filenameStartIndex);
+
+  if (itemName === filename) {
+    console.log(`Found existing ${filename}`);
+    // halt if found?
+  } else {
+    // create Dockerfile
+    const contents = encoder.encode("");
+    await Deno.writeFile(`${filepath}${filename}`, contents);
+  }
+}
+
 async function initDocker() {
   for await (const item of Deno.readDir(".")) {
-    // check if Dockerfile exists
-    if (item.name === dockerFile) {
-      console.log("Found existing Dockerfile");
-      // halt if found?
-    } else {
-      // create Dockerfile
-      const contents = encoder.encode("");
-      await Deno.writeFile(`./${dockerFile}`, contents);
-    }
+    createFileWithPath(item.name, `./${dockerFile}`, "")
 
     // check if docker-compose.yml exists
     if (item.name === dockerComposeFile) {
