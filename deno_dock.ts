@@ -20,8 +20,18 @@ const dockerFile = "./Dockerfile";
 const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
-  
-type Render = () => string;
+const decoder = new TextDecoder();
+
+const renderEmpty = async () => {
+  new Promise<string>(() => "");
+}
+
+const renderDockerFile = async () => {
+  const template = await Deno.readFile("Dockerfile.mustache");
+  return Mustache.render(decoder.decode(template), { scriptName: "main.ts" }); 
+};
+ 
+type Render = typeof renderDockerFile | typeof renderEmpty; //() => Promise<string>;
 
 /**
  * Using `Mustache` here produces a TS error in Vim:
@@ -32,9 +42,9 @@ type Render = () => string;
  * know how to handle external imports fully, or because I'm not strictly importing the module
  * correctly.
  **/
-const dockerfileTemplate = { filepath: dockerFile, renderContents: () => { return Mustache.render("Hello, Deno", {}) } }
-const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: () => "" }
-const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: () => "" }
+const dockerfileTemplate = { filepath: dockerFile, renderContents: renderDockerFile }
+const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: renderEmpty }
+const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: renderEmpty }
 
 async function createFileWithPath(fileWithPath: string, renderContents: Render) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
@@ -87,7 +97,7 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
   } catch(err) {
     if (err instanceof Deno.errors.NotFound) {
       // we create the file
-      const encodedContents = encoder.encode(renderContents());
+      const encodedContents = encoder.encode(await renderContents());
       await Deno.writeFile(`${filepath}${filename}`, encodedContents);
     } else {
       // something strange happened
