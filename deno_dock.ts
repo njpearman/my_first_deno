@@ -46,6 +46,30 @@ const dockerfileTemplate = { filepath: dockerFile, renderContents: renderDockerF
 const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: renderEmpty }
 const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: renderEmpty }
 
+async function ensureDirectoryExists(filepath: string) {
+  try {
+    const info = Deno.lstat(filepath);
+
+    if (!(await info).isDirectory) {
+      // we have a problem
+      throw new Error(`Expected ${filepath} to be a directory`); 
+    }
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      try {
+        // make the directory!
+        await Deno.mkdir(filepath, { recursive: true })
+      } catch (err) {
+        console.log(`Unable to create directory ${filepath}`);
+        throw err;
+      }
+    } else {
+      // bad things happened
+      throw err;
+    }
+  }
+}
+
 async function createFileWithPath(fileWithPath: string, renderContents: Render) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
@@ -53,27 +77,7 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
 
   // This is hardcoded for nixy paths and needs to be made more cleverer.
   if (filepath.length > 0 && filepath !== "./") {
-    try {
-      const info = Deno.lstat(filepath);
-
-      if (!(await info).isDirectory) {
-        // we have a problem
-        throw new Error(`Expected ${filepath} to be a directory`); 
-      }
-    } catch (err) {
-      if (err instanceof Deno.errors.NotFound) {
-        try {
-          // make the directory!
-          await Deno.mkdir(filepath, { recursive: true })
-        } catch (err) {
-          console.log(`Unable to create directory ${filepath}`);
-          throw err;
-        }
-      } else {
-        // bad things happened
-        throw err;
-      }
-    }
+    await ensureDirectoryExists(filepath);
   }
 
   /**
