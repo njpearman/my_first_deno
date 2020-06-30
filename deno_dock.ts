@@ -26,10 +26,13 @@ const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
 
-const renderMustacheTemplate = async (templateName: string, values: object = {}) => {
+const renderMustacheTemplate = async (
+  templateName: string,
+  values: object = {},
+) => {
   const template = await Deno.readFile(templateName);
-  return Mustache.render(decoder.decode(template), values); 
-}
+  return Mustache.render(decoder.decode(template), values);
+};
 
 type Render = typeof renderEmpty; //() => Promise<string>;
 
@@ -42,9 +45,25 @@ type Render = typeof renderEmpty; //() => Promise<string>;
  * know how to handle external imports fully, or because I'm not strictly importing the module
  * correctly.
  **/
-const dockerfileTemplate = { filepath: dockerFile, renderContents: () => { return renderMustacheTemplate("Dockerfile.mustache", { scriptName: "main.ts" }); } }
-const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: () => { return renderMustacheTemplate("docker-compose.yml.mustache") } }
-const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: renderEmpty }
+const dockerfileTemplate = {
+  filepath: dockerFile,
+  renderContents: () => {
+    return renderMustacheTemplate(
+      "Dockerfile.mustache",
+      { scriptName: "main.ts" },
+    );
+  },
+};
+const dockerComposeYmlTemplate = {
+  filepath: dockerComposeFile,
+  renderContents: () => {
+    return renderMustacheTemplate("docker-compose.yml.mustache");
+  },
+};
+const appDevelopmentEnvTemplate = {
+  filepath: appDevelopmentEnvFile,
+  renderContents: renderEmpty,
+};
 
 async function ensureDirectoryExists(filepath: string) {
   try {
@@ -52,13 +71,13 @@ async function ensureDirectoryExists(filepath: string) {
 
     if (!(await info).isDirectory) {
       // we have a problem
-      throw new Error(`Expected ${filepath} to be a directory`); 
+      throw new Error(`Expected ${filepath} to be a directory`);
     }
   } catch (err) {
     if (err instanceof Deno.errors.NotFound) {
       try {
         // make the directory!
-        await Deno.mkdir(filepath, { recursive: true })
+        await Deno.mkdir(filepath, { recursive: true });
       } catch (err) {
         console.log(`Unable to create directory ${filepath}`);
         throw err;
@@ -70,7 +89,10 @@ async function ensureDirectoryExists(filepath: string) {
   }
 }
 
-async function createFileWithPath(fileWithPath: string, renderContents: Render) {
+async function createFileWithPath(
+  fileWithPath: string,
+  renderContents: Render,
+) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
@@ -88,7 +110,7 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
    * understand or implement.
    */
   try {
-    // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than 
+    // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
     // the symlink itself
     const fileInfo = await Deno.lstat(fileWithPath);
 
@@ -98,7 +120,7 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
       console.log(`Found existing ${filename}`);
       // halt if found?
     }
-  } catch(err) {
+  } catch (err) {
     if (err instanceof Deno.errors.NotFound) {
       // we create the file
       const encodedContents = encoder.encode(await renderContents());
@@ -111,29 +133,35 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
 }
 
 async function initDocker() {
-
   // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
   // that this is the way to do it.
   const templates = {
-    templateList: [dockerfileTemplate, dockerComposeYmlTemplate, appDevelopmentEnvTemplate],
+    templateList: [
+      dockerfileTemplate,
+      dockerComposeYmlTemplate,
+      appDevelopmentEnvTemplate,
+    ],
     [Symbol.asyncIterator]() {
       return {
         templatesLeft: [...this.templateList],
         async next() {
           const currentTemplate = this.templatesLeft.pop();
-          if(currentTemplate) {
-            await createFileWithPath(currentTemplate.filepath, currentTemplate.renderContents);
+          if (currentTemplate) {
+            await createFileWithPath(
+              currentTemplate.filepath,
+              currentTemplate.renderContents,
+            );
             return { done: false, value: currentTemplate };
           } else {
             return { done: true };
           }
-        }
+        },
       };
-    }
+    },
   };
-  
+
   for await (let template of templates) {
-    if(template) {
+    if (template) {
       console.log(`Worked ${template.filepath}`);
     }
   }
