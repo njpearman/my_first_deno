@@ -21,6 +21,8 @@ const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
   
+type Render = () => string;
+
 /**
  * Using `Mustache` here produces a TS error in Vim:
  * Cannot invoke an object that is possibly undefined.
@@ -30,11 +32,11 @@ const encoder = new TextEncoder();
  * know how to handle external imports fully, or because I'm not strictly importing the module
  * correctly.
  **/
-const dockerfileTemplate = { filepath: dockerFile, contents: Mustache.render("Hello, Deno", {}) }
-const dockerComposeYmlTemplate = { filepath: dockerComposeFile, contents: "" }
-const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, contents: "" }
+const dockerfileTemplate = { filepath: dockerFile, renderContents: () => { return Mustache.render("Hello, Deno", {}) } }
+const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: () => "" }
+const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: () => "" }
 
-async function createFileWithPath(fileWithPath: string, contents: string) {
+async function createFileWithPath(fileWithPath: string, renderContents: Render) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
@@ -85,7 +87,7 @@ async function createFileWithPath(fileWithPath: string, contents: string) {
   } catch(err) {
     if (err instanceof Deno.errors.NotFound) {
       // we create the file
-      const encodedContents = encoder.encode(contents);
+      const encodedContents = encoder.encode(renderContents());
       await Deno.writeFile(`${filepath}${filename}`, encodedContents);
     } else {
       // something strange happened
@@ -105,7 +107,7 @@ async function initDocker() {
         async next() {
           const currentTemplate = this.templatesLeft.pop();
           if(currentTemplate) {
-            await createFileWithPath(currentTemplate.filepath, currentTemplate.contents);
+            await createFileWithPath(currentTemplate.filepath, currentTemplate.renderContents);
             return { done: false, value: currentTemplate };
           } else {
             return { done: true };
