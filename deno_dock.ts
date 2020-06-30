@@ -14,12 +14,23 @@
  * Let's start with that.
  **/
 
+import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
+
 const dockerFile = "./Dockerfile";
 const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
-
-const dockerfileTemplate = { filepath: dockerFile, contents: "" }
+  
+/**
+ * Using `Mustache` here produces a TS error in Vim:
+ * Cannot invoke an object that is possibly undefined.
+ *
+ * However, Deno runs happily with this code. I've tried to hunt around for the reason that it
+ * happens and can't find anything. It might be because the language server implementation doesn't
+ * know how to handle external imports fully, or because I'm not strictly importing the module
+ * correctly.
+ **/
+const dockerfileTemplate = { filepath: dockerFile, contents: Mustache.render("Hello, Deno", {}) }
 const dockerComposeYmlTemplate = { filepath: dockerComposeFile, contents: "" }
 const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, contents: "" }
 
@@ -94,7 +105,7 @@ async function initDocker() {
         async next() {
           const currentTemplate = this.templatesLeft.pop();
           if(currentTemplate) {
-            await createFileWithPath(currentTemplate.filepath, currentTemplate.filepath);
+            await createFileWithPath(currentTemplate.filepath, currentTemplate.contents);
             return { done: false, value: currentTemplate };
           } else {
             return { done: true };
