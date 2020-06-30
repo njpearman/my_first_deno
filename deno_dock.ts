@@ -23,15 +23,15 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const renderEmpty = async () => {
-  new Promise<string>(() => "");
-}
+  return new Promise<string>((resolve) => resolve(""));
+};
 
 const renderDockerFile = async () => {
   const template = await Deno.readFile("Dockerfile.mustache");
   return Mustache.render(decoder.decode(template), { scriptName: "main.ts" }); 
 };
  
-type Render = typeof renderDockerFile | typeof renderEmpty; //() => Promise<string>;
+type Render =  typeof renderEmpty; //() => Promise<string>;
 
 /**
  * Using `Mustache` here produces a TS error in Vim:
@@ -105,6 +105,7 @@ async function createFileWithPath(fileWithPath: string, renderContents: Render) 
       await Deno.writeFile(`${filepath}${filename}`, encodedContents);
     } else {
       // something strange happened
+      console.log(`Unexpected file error: ${err}`);
     }
   }
 }
