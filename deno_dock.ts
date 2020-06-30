@@ -19,14 +19,15 @@ const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
 
+const dockerfileTemplate = { filepath: dockerFile, contents: "" }
+const dockerComposeYmlTemplate = { filepath: dockerComposeFile, contents: "" }
+const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, contents: "" }
+
 async function createFileWithPath(fileWithPath: string, contents: string) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
   const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
 
-  //   abort on `../`?
-  //   abort on `/ ...`?
- 
   // This is hardcoded for nixy paths and needs to be made more cleverer.
   if (filepath.length > 0 && filepath !== "./") {
     try {
@@ -85,17 +86,16 @@ async function initDocker() {
 
   // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
   // that this is the way to do it.
-  
-  const files = {
-    fileList: [dockerFile, dockerComposeFile, appDevelopmentEnvFile],
+  const templates = {
+    templateList: [dockerfileTemplate, dockerComposeYmlTemplate, appDevelopmentEnvTemplate],
     [Symbol.asyncIterator]() {
       return {
-        filesLeft: [...this.fileList],
+        templatesLeft: [...this.templateList],
         async next() {
-          const currentFile = this.filesLeft.pop();
-          if(currentFile) {
-            await createFileWithPath(currentFile, "");
-            return { done: false, value: currentFile };
+          const currentTemplate = this.templatesLeft.pop();
+          if(currentTemplate) {
+            await createFileWithPath(currentTemplate.filepath, currentTemplate.filepath);
+            return { done: false, value: currentTemplate };
           } else {
             return { done: true };
           }
@@ -104,8 +104,10 @@ async function initDocker() {
     }
   };
   
-  for await (let file of files) {
-    console.log(`Worked ${file}`);
+  for await (let template of templates) {
+    if(template) {
+      console.log(`Worked ${template.filepath}`);
+    }
   }
 }
 
