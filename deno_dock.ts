@@ -26,12 +26,12 @@ const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
 
-const renderDockerFile = async () => {
-  const template = await Deno.readFile("Dockerfile.mustache");
-  return Mustache.render(decoder.decode(template), { scriptName: "main.ts" }); 
-};
- 
-type Render =  typeof renderEmpty; //() => Promise<string>;
+const renderMustacheTemplate = async (templateName: string, values: object = {}) => {
+  const template = await Deno.readFile(templateName);
+  return Mustache.render(decoder.decode(template), values); 
+}
+
+type Render = typeof renderEmpty; //() => Promise<string>;
 
 /**
  * Using `Mustache` here produces a TS error in Vim:
@@ -42,8 +42,8 @@ type Render =  typeof renderEmpty; //() => Promise<string>;
  * know how to handle external imports fully, or because I'm not strictly importing the module
  * correctly.
  **/
-const dockerfileTemplate = { filepath: dockerFile, renderContents: renderDockerFile }
-const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: renderEmpty }
+const dockerfileTemplate = { filepath: dockerFile, renderContents: () => { return renderMustacheTemplate("Dockerfile.mustache", { scriptName: "main.ts" }); } }
+const dockerComposeYmlTemplate = { filepath: dockerComposeFile, renderContents: () => { return renderMustacheTemplate("docker-compose.yml.mustache") } }
 const appDevelopmentEnvTemplate = { filepath: appDevelopmentEnvFile, renderContents: renderEmpty }
 
 async function ensureDirectoryExists(filepath: string) {
