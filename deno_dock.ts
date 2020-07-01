@@ -50,16 +50,18 @@ const dockerfileTemplate = {
   renderContents: () => {
     return renderMustacheTemplate(
       "Dockerfile.mustache",
-      { scriptName: "main.ts" },
+      { scriptName: Deno.args[0] },
     );
   },
 };
+
 const dockerComposeYmlTemplate = {
   filepath: dockerComposeFile,
   renderContents: () => {
     return renderMustacheTemplate("docker-compose.yml.mustache");
   },
 };
+
 const appDevelopmentEnvTemplate = {
   filepath: appDevelopmentEnvFile,
   renderContents: renderEmpty,
@@ -167,4 +169,14 @@ async function initDocker() {
   }
 }
 
-initDocker();
+function run() {
+  if (!Deno.args[0]) {
+    console.log("Please provide the name of the javascript or typescript file to run in Docker\n" +
+                "Usage: deno_dock [file]");
+    Deno.exit(1);
+  }
+
+  initDocker();
+}
+
+run();
