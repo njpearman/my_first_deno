@@ -46,15 +46,21 @@ type Render = typeof renderEmpty; //() => Promise<string>;
  * know how to handle external imports fully, or because I'm not strictly importing the module
  * correctly.
  **/
-const dockerfileTemplate = {
-  filepath: dockerFile,
-  renderContents: () => {
+class DockerfileTemplate {
+  #scriptName: string;
+  constructor(scriptName: string, public filepath: string = dockerFile) {
+    this.#scriptName = scriptName;
+  }
+  
+  renderContents() {
     return renderMustacheTemplate(
       "Dockerfile.mustache",
-      { scriptName: Deno.args[0] },
+      { scriptName: this.#scriptName },
     );
-  },
-};
+  }
+}
+
+let dockerfileTemplate: DockerfileTemplate;
 
 const dockerComposeYmlTemplate = {
   filepath: dockerComposeFile,
@@ -177,12 +183,20 @@ function run() {
     Deno.exit(1);
   }
 
-  initDocker();
 }
 
+const newCommand = new Command()
+  .arguments("<file>")
+  .action((file: string) => {
+    console.log("Running new command");
+    dockerfileTemplate = new DockerfileTemplate(file);
+    initDocker();
+  });
+  
 await new Command()
   .name("deno_dock")
   .version("0.0.1")
-  .parse();
-
-run();
+  .description("Simple set up for a simple Docker environment for a Deno project")
+  .arguments("<command>")
+  .command("new", newCommand)
+  .parse(Deno.args);
