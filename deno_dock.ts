@@ -23,6 +23,21 @@ const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
+
+async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
+  try {
+    await fileSystemOperation();
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      await onNotFound();
+    } else {
+      console.log(`Error ignoring not found: ${error}`);
+      throw error;
+    }
+  }
+}
+
 const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
@@ -83,27 +98,26 @@ const appDevelopmentEnvTemplate = {
 };
 
 async function ensureDirectoryExists(filepath: string) {
-  try {
+  const isDirectoryCheck = async () => {
     const info = Deno.lstat(filepath);
 
     if (!(await info).isDirectory) {
       // we have a problem
       throw new Error(`Expected ${filepath} to be a directory`);
     }
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
-      try {
-        // make the directory!
-        await Deno.mkdir(filepath, { recursive: true });
-      } catch (err) {
-        console.log(`Unable to create directory ${filepath}`);
-        throw err;
-      }
-    } else {
-      // bad things happened
+  };
+
+  const makeDirectory = async () => {
+    try {
+      // make the directory!
+      await Deno.mkdir(filepath, { recursive: true });
+    } catch (err) {
+      console.log(`Unable to create directory ${filepath}`);
       throw err;
     }
-  }
+  };
+
+  await ignoreNotFound(isDirectoryCheck, makeDirectory);
 }
 
 async function createFileWithPath(
@@ -126,7 +140,7 @@ async function createFileWithPath(
    * specifics I might need rather than importing a small function that might make things harder for me to
    * understand or implement.
    */
-  try {
+  const fileExists = async () => {
     // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
     // the symlink itself
     const fileInfo = await Deno.lstat(fileWithPath);
@@ -137,16 +151,14 @@ async function createFileWithPath(
       console.log(`Found existing ${filename}`);
       // halt if found?
     }
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
-      // we create the file
-      const encodedContents = encoder.encode(await renderContents());
-      await Deno.writeFile(`${filepath}${filename}`, encodedContents);
-    } else {
-      // something strange happened
-      console.log(`Unexpected file error: ${err}`);
-    }
   }
+
+  const render = async () => {
+    const encodedContents = encoder.encode(await renderContents());
+    await Deno.writeFile(`${filepath}${filename}`, encodedContents);
+  }
+
+  await ignoreNotFound(fileExists, render);
 }
 
 async function initDocker() {
@@ -199,17 +211,17 @@ const commandForNew = new Command()
   });
 
 const commandForPurge = new Command()
-  .action(() => {
+  .action(async () => {
     console.log("Deleting all Docker files and directories");
     const dockerFiles = ["Dockerfile", "docker-compose.yml"];
     const dockerDirectories = [".env"];
 
     for (const file of dockerFiles) {
-      Deno.remove(file);
+      ignoreNotFound(() => Deno.remove(file));
     }
 
     for (const directory of dockerDirectories) {
-      Deno.remove(directory, { recursive: true });
+      ignoreNotFound(() => Deno.remove(directory, { recursive: true }));
     }
   });
 
