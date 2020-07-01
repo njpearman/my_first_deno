@@ -184,6 +184,21 @@ const commandForNew = new Command()
     initDocker();
   });
 
+const commandForPurge = new Command()
+  .action(() => {
+    console.log("Deleting all Docker files and directories");
+    const dockerFiles = ["Dockerfile", "docker-compose.yml"];
+    const dockerDirectories = [".env"];
+
+    for (const file of dockerFiles) {
+      Deno.remove(file);
+    }
+
+    for (const directory of dockerDirectories) {
+      Deno.remove(directory, { recursive: true });
+    }
+  });
+
 await new Command()
   .name("deno_dock")
   .version("0.0.1")
@@ -192,4 +207,5 @@ await new Command()
   )
   .arguments("<command>")
   .command("new", commandForNew)
+  .command("purge", commandForPurge)
   .parse(Deno.args);
