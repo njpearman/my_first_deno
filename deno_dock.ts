@@ -48,15 +48,18 @@ type Render = typeof renderEmpty; //() => Promise<string>;
 
 class DockerfileTemplate {
   #scriptName: string;
-  constructor(scriptName: string, public filepath: string = "./Dockerfile") {
+  #allows: string[];
+  constructor(scriptName: string, allows: string[] = [], public filepath: string = "./Dockerfile") {
     this.#scriptName = scriptName;
+    this.#allows = allows;
     this.renderContents = this.renderContents.bind(this);
   }
 
   renderContents() {
+    console.log(`allows are: ${this.#allows.join(";")}`);
     return renderMustacheTemplate(
       "Dockerfile.mustache",
-      { scriptName: this.#scriptName },
+      { scriptName: this.#scriptName, allows: this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + "," },
     );
   }
 }
@@ -179,9 +182,15 @@ async function initDocker() {
 
 const commandForNew = new Command()
   .arguments("<file>")
-  .action((_: IFlags, file: string) => {
+  .option("-a, --allows <allows:string[]>", "comma separated list of Deno permissions. Use the Deno run allow you want, minus `--allow-`")
+  .action((options: { allows: string[] }, file: string) => {
     console.log(`Running new command with ${file}`);
-    dockerfileTemplate = new DockerfileTemplate(file);
+    console.log(`Docker will allow: ${options.allows}`);
+    if (options.allows) {
+      dockerfileTemplate = new DockerfileTemplate(file, options.allows);
+    } else {
+      dockerfileTemplate = new DockerfileTemplate(file);
+    }
     initDocker();
   });
 

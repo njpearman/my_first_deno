@@ -10,4 +10,4 @@ ADD . .
 
 RUN deno cache {{scriptName}}
 
-CMD ["run", "--allow-net", "{{scriptName}}"]
+CMD ["run", {{&allows}} "{{scriptName}}"]
