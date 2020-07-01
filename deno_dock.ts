@@ -50,7 +50,7 @@ class DockerfileTemplate {
   constructor(scriptName: string, public filepath: string = "./Dockerfile") {
     this.#scriptName = scriptName;
   }
-  
+
   renderContents() {
     return renderMustacheTemplate(
       "Dockerfile.mustache",
@@ -182,11 +182,13 @@ const newCommand = new Command()
     dockerfileTemplate = new DockerfileTemplate(file);
     initDocker();
   });
-  
+
 await new Command()
   .name("deno_dock")
   .version("0.0.1")
-  .description("Simple set up for a simple Docker environment for a Deno project")
+  .description(
+    "Simple set up for a simple Docker environment for a Deno project",
+  )
   .arguments("<command>")
   .command("new", newCommand)
   .parse(Deno.args);
