@@ -26,6 +26,15 @@ const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
 
+/**
+ * Using `Mustache` here produces a TS error in Vim:
+ * Cannot invoke an object that is possibly undefined.
+ *
+ * However, Deno runs happily with this code. I've tried to hunt around for the reason that it
+ * happens and can't find anything. It might be because the language server implementation doesn't
+ * know how to handle external imports fully, or because I'm not strictly importing the module
+ * correctly.
+ **/
 const renderMustacheTemplate = async (
   templateName: string,
   values: object = {},
@@ -36,15 +45,6 @@ const renderMustacheTemplate = async (
 
 type Render = typeof renderEmpty; //() => Promise<string>;
 
-/**
- * Using `Mustache` here produces a TS error in Vim:
- * Cannot invoke an object that is possibly undefined.
- *
- * However, Deno runs happily with this code. I've tried to hunt around for the reason that it
- * happens and can't find anything. It might be because the language server implementation doesn't
- * know how to handle external imports fully, or because I'm not strictly importing the module
- * correctly.
- **/
 class DockerfileTemplate {
   #scriptName: string;
   constructor(scriptName: string, public filepath: string = "./Dockerfile") {
