@@ -17,7 +17,6 @@
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
 
-const dockerFile = "./Dockerfile";
 const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
@@ -48,7 +47,7 @@ type Render = typeof renderEmpty; //() => Promise<string>;
  **/
 class DockerfileTemplate {
   #scriptName: string;
-  constructor(scriptName: string, public filepath: string = dockerFile) {
+  constructor(scriptName: string, public filepath: string = "./Dockerfile") {
     this.#scriptName = scriptName;
   }
   
@@ -174,15 +173,6 @@ async function initDocker() {
       console.log(`Worked ${template.filepath}`);
     }
   }
-}
-
-function run() {
-  if (!Deno.args[0]) {
-    console.log("Please provide the name of the javascript or typescript file to run in Docker\n" +
-                "Usage: deno_dock [file]");
-    Deno.exit(1);
-  }
-
 }
 
 const newCommand = new Command()
