@@ -49,6 +49,7 @@ class DockerfileTemplate {
   #scriptName: string;
   constructor(scriptName: string, public filepath: string = "./Dockerfile") {
     this.#scriptName = scriptName;
+    this.renderContents = this.renderContents.bind(this);
   }
 
   renderContents() {
@@ -175,7 +176,7 @@ async function initDocker() {
   }
 }
 
-const newCommand = new Command()
+const commandForNew = new Command()
   .arguments("<file>")
   .action((file: string) => {
     console.log("Running new command");
@@ -190,5 +191,5 @@ await new Command()
     "Simple set up for a simple Docker environment for a Deno project",
   )
   .arguments("<command>")
-  .command("new", newCommand)
+  .command("new", commandForNew)
   .parse(Deno.args);
