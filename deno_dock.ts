@@ -57,9 +57,13 @@ class DockerfileTemplate {
 
   renderContents() {
     console.log(`allows are: ${this.#allows.join(";")}`);
+    let values: { scriptName: string, allows?: string } = { scriptName: this.#scriptName };
+    if (this.#allows.length > 0) {
+      values.allows = this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + ", ";
+    }
     return renderMustacheTemplate(
       "Dockerfile.mustache",
-      { scriptName: this.#scriptName, allows: this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + "," },
+      values,
     );
   }
 }
