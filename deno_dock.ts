@@ -14,7 +14,6 @@
  * Let's start with that.
  **/
 
-import { IFlags } from "https://deno.land/x/cliffy@v0.10.0/packages/flags/mod.ts";
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
 
