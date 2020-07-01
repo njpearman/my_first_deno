@@ -14,6 +14,7 @@
  * Let's start with that.
  **/
 
+import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
 
 const dockerFile = "./Dockerfile";
@@ -178,5 +179,10 @@ function run() {
 
   initDocker();
 }
+
+await new Command()
+  .name("deno_dock")
+  .version("0.0.1")
+  .parse();
 
 run();
