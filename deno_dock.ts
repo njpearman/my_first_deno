@@ -24,6 +24,12 @@ const decoder = new TextDecoder();
 
 const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
 
+class TemplateError extends Deno.errors.NotFound {
+  constructor(templateName: string) {
+    super(`Cannot find template ${templateName}`);
+  }
+}
+
 async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
   try {
     await fileSystemOperation();
@@ -54,8 +60,12 @@ const renderMustacheTemplate = async (
   templateName: string,
   values: object = {},
 ) => {
-  const template = await Deno.readFile(templateName);
-  return Mustache.render(decoder.decode(template), values);
+    try {
+      const template = await Deno.readFile(templateName);
+      return Mustache.render(decoder.decode(template), values);
+    } catch (err) {
+      throw new TemplateError(templateName);
+    }
 };
 
 type Render = typeof renderEmpty; //() => Promise<string>;
@@ -230,7 +240,6 @@ await new Command()
   .description(
     "Simple set up for a simple Docker environment for a Deno project",
   )
-  .arguments("<command>")
   .command("new", commandForNew)
   .command("purge", commandForPurge)
   .parse(Deno.args);
