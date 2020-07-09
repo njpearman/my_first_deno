@@ -24,15 +24,20 @@ const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
 
-const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
+const onNotFoundDefault = () => new Promise<string>((resolve) => resolve(""));
 
 class TemplateError extends Deno.errors.NotFound {
   constructor(templateName: string, cause: Error) {
-    super(`Unable to read template ${templateName}. Underlying error: ${cause}`);
+    super(
+      `Unable to read template ${templateName}. Underlying error: ${cause}`,
+    );
   }
 }
 
-async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
+async function ignoreNotFound(
+  fileSystemOperation: () => Promise<any>,
+  onNotFound: () => Promise<any> = onNotFoundDefault,
+) {
   try {
     await fileSystemOperation();
   } catch (error) {
@@ -63,11 +68,11 @@ const renderMustacheTemplate = async (
   templateName: string,
   values: object = {},
 ) => {
-    try {
-      return Mustache.render(template, values);
-    } catch (err) {
-      throw new TemplateError(templateName, err);
-    }
+  try {
+    return Mustache.render(template, values);
+  } catch (err) {
+    throw new TemplateError(templateName, err);
+  }
 };
 
 type Render = typeof renderEmpty; //() => Promise<string>;
@@ -75,7 +80,11 @@ type Render = typeof renderEmpty; //() => Promise<string>;
 class DockerfileTemplate {
   #scriptName: string;
   #allows: string[];
-  constructor(scriptName: string, allows: string[] = [], public filepath: string = "./Dockerfile") {
+  constructor(
+    scriptName: string,
+    allows: string[] = [],
+    public filepath: string = "./Dockerfile",
+  ) {
     this.#scriptName = scriptName;
     this.#allows = allows;
     this.renderContents = this.renderContents.bind(this);
@@ -83,9 +92,13 @@ class DockerfileTemplate {
 
   renderContents() {
     console.log(`allows are: ${this.#allows.join(";")}`);
-    let values: { scriptName: string, allows?: string } = { scriptName: this.#scriptName };
+    let values: { scriptName: string; allows?: string } = {
+      scriptName: this.#scriptName,
+    };
     if (this.#allows.length > 0) {
-      values.allows = this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + ", ";
+      values.allows = this.#allows.map((allow) =>
+        `"--allow-${allow}"`
+      ).join(", ") + ", ";
     }
     return renderMustacheTemplate(
       DockerfileTemplateContents,
@@ -103,7 +116,7 @@ const dockerComposeYmlTemplate = {
     return renderMustacheTemplate(
       DockerComposeYmlTemplateContents,
       "./docker-compose.yml",
-    )
+    );
   },
 };
 
@@ -166,12 +179,12 @@ async function createFileWithPath(
       console.log(`Found existing ${filename}`);
       // halt if found?
     }
-  }
+  };
 
   const render = async () => {
     const encodedContents = encoder.encode(await renderContents());
     await Deno.writeFile(`${filepath}${filename}`, encodedContents);
-  }
+  };
 
   await ignoreNotFound(fileExists, render);
 }
@@ -213,7 +226,10 @@ async function initDocker() {
 
 const commandForNew = new Command()
   .arguments("<file>")
-  .option("-a, --allows <allows:string[]>", "comma separated list of Deno permissions. Use the Deno run allow you want, minus `--allow-`")
+  .option(
+    "-a, --allows <allows:string[]>",
+    "comma separated list of Deno permissions. Use the Deno run allow you want, minus `--allow-`",
+  )
   .action((options: { allows: string[] }, file: string) => {
     console.log(`Running new command with ${file}`);
     console.log(`Docker will allow: ${options.allows}`);
