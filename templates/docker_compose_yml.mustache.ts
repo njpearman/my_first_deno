@@ -1,4 +1,4 @@
-version: "3.4"
+const Template = `version: "3.4"
 
 services:
   web:
@@ -8,4 +8,6 @@ services:
     volumes:
       - .:/app
     env_file:
-      - .env/development/app
+      - .env/development/app`;
+
+export default Template;

@@ -14,19 +14,21 @@
  * Let's start with that.
  **/
 
+import DockerComposeYmlTemplateContents from "./templates/docker_compose_yml.mustache.ts";
+import DockerfileTemplateContents from "./templates/dockerfile.mustache.ts";
+
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
 
 const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
 
 class TemplateError extends Deno.errors.NotFound {
-  constructor(templateName: string) {
-    super(`Cannot find template ${templateName}`);
+  constructor(templateName: string, cause: Error) {
+    super(`Unable to read template ${templateName}. Underlying error: ${cause}`);
   }
 }
 
@@ -57,14 +59,14 @@ const renderEmpty = async () => {
  * correctly.
  **/
 const renderMustacheTemplate = async (
+  template: string,
   templateName: string,
   values: object = {},
 ) => {
     try {
-      const template = await Deno.readFile(templateName);
-      return Mustache.render(decoder.decode(template), values);
+      return Mustache.render(template, values);
     } catch (err) {
-      throw new TemplateError(templateName);
+      throw new TemplateError(templateName, err);
     }
 };
 
@@ -86,7 +88,8 @@ class DockerfileTemplate {
       values.allows = this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + ", ";
     }
     return renderMustacheTemplate(
-      "Dockerfile.mustache",
+      DockerfileTemplateContents,
+      "./Dockerfile",
       values,
     );
   }
@@ -97,7 +100,10 @@ let dockerfileTemplate: DockerfileTemplate;
 const dockerComposeYmlTemplate = {
   filepath: dockerComposeFile,
   renderContents: () => {
-    return renderMustacheTemplate("docker-compose.yml.mustache");
+    return renderMustacheTemplate(
+      DockerComposeYmlTemplateContents,
+      "./docker-compose.yml",
+    )
   },
 };
 
