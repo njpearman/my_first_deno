@@ -14,23 +14,15 @@
  * Let's start with that.
  **/
 
-import DockerfileTemplateContents from "./templates/dockerfile.mustache.ts";
+import DockerfileTemplate from "./templates/mustache/dockerfile.mustache.ts";
+import dockerComposeYmlTemplate from "./templates/yaml/docker_compose.yml.ts";
 
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
-import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
-import { stringify } from "https://deno.land/std/encoding/yaml.ts";
 
-const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
 const encoder = new TextEncoder();
 
 const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
-
-class TemplateError extends Deno.errors.NotFound {
-  constructor(templateName: string, cause: Error) {
-    super(`Unable to read template ${templateName}. Underlying error: ${cause}`);
-  }
-}
 
 async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
   try {
@@ -49,79 +41,10 @@ const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
 
-/**
- * Using `Mustache` here produces a TS error in Vim:
- * Cannot invoke an object that is possibly undefined.
- *
- * However, Deno runs happily with this code. I've tried to hunt around for the reason that it
- * happens and can't find anything. It might be because the language server implementation doesn't
- * know how to handle external imports fully, or because I'm not strictly importing the module
- * correctly.
- **/
-const renderMustacheTemplate = async (
-  template: string,
-  templateName: string,
-  values: object = {},
-) => {
-    try {
-      return Mustache.render(template, values);
-    } catch (err) {
-      throw new TemplateError(templateName, err);
-    }
-};
-
 type Render = typeof renderEmpty; //() => Promise<string>;
-
-class DockerfileTemplate {
-  #scriptName: string;
-  #allows: string[];
-  constructor(scriptName: string, allows: string[] = [], public filepath: string = "./Dockerfile") {
-    this.#scriptName = scriptName;
-    this.#allows = allows;
-    this.renderContents = this.renderContents.bind(this);
-  }
-
-  renderContents() {
-    console.log(`allows are: ${this.#allows.join(";")}`);
-    let values: { scriptName: string, allows?: string } = { scriptName: this.#scriptName };
-    if (this.#allows.length > 0) {
-      values.allows = this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + ", ";
-    }
-    return renderMustacheTemplate(
-      DockerfileTemplateContents,
-      "./Dockerfile",
-      values,
-    );
-  }
-}
 
 let dockerfileTemplate: DockerfileTemplate;
 
-const dockerComposeYmlTemplate = {
-  filepath: dockerComposeFile,
-  renderContents: () => {
-    const composeAsObject = {
-      version: "3.4",
-      services: {
-        web: {
-          build: ".",
-          ports: [
-            "4604:4604",
-          ],
-          volumes: [
-            ".:/app",
-          ],
-          env_file: [
-            ".env/development/app"
-          ],
-        }
-      }
-    };
-
-    // do the YAML
-    return new Promise<string>((resolve) => resolve(stringify(composeAsObject)));
-  },
-};
 const appDevelopmentEnvTemplate = {
   filepath: appDevelopmentEnvFile,
   renderContents: renderEmpty,
