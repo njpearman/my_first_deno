@@ -14,11 +14,11 @@
  * Let's start with that.
  **/
 
-import DockerComposeYmlTemplateContents from "./templates/docker_compose_yml.mustache.ts";
 import DockerfileTemplateContents from "./templates/dockerfile.mustache.ts";
 
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
+import { stringify } from "https://deno.land/std/encoding/yaml.ts";
 
 const dockerComposeFile = "./docker-compose.yml";
 const appDevelopmentEnvFile = "./.env/development/app";
@@ -100,13 +100,28 @@ let dockerfileTemplate: DockerfileTemplate;
 const dockerComposeYmlTemplate = {
   filepath: dockerComposeFile,
   renderContents: () => {
-    return renderMustacheTemplate(
-      DockerComposeYmlTemplateContents,
-      "./docker-compose.yml",
-    )
+    const composeAsObject = {
+      version: "3.4",
+      services: {
+        web: {
+          build: ".",
+          ports: [
+            "4604:4604",
+          ],
+          volumes: [
+            ".:/app",
+          ],
+          env_file: [
+            ".env/development/app"
+          ],
+        }
+      }
+    };
+
+    // do the YAML
+    return new Promise<string>((resolve) => resolve(stringify(composeAsObject)));
   },
 };
-
 const appDevelopmentEnvTemplate = {
   filepath: appDevelopmentEnvFile,
   renderContents: renderEmpty,
