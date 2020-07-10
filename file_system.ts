@@ -1,5 +1,28 @@
 const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
 
+async function isDirectoryCheck(filepath: string) {
+  const info = Deno.lstat(filepath);
+
+  if (!(await info).isDirectory) {
+    // we have a problem
+    throw new Error(`Expected ${filepath} to be a directory`);
+  }
+};
+
+async function makeDirectory(filepath: string) {
+  try {
+    // make the directory!
+    await Deno.mkdir(filepath, { recursive: true });
+  } catch (err) {
+    console.log(`Unable to create directory ${filepath}`);
+    throw err;
+  }
+};
+
+export async function ensureDirectoryExists(filepath: string) {
+  await ignoreNotFound(() => isDirectoryCheck(filepath), () => makeDirectory(filepath));
+}
+
 export async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
   try {
     await fileSystemOperation();
@@ -17,31 +40,6 @@ export async function removeWithLogging(fileSystemObject: string, options: any =
   await Deno.remove(fileSystemObject, options);
   console.log(`Removed ${fileSystemObject}`);
 }
-
-export async function ensureDirectoryExists(filepath: string) {
-  const isDirectoryCheck = async () => {
-    const info = Deno.lstat(filepath);
-
-    if (!(await info).isDirectory) {
-      // we have a problem
-      throw new Error(`Expected ${filepath} to be a directory`);
-    }
-  };
-
-  const makeDirectory = async () => {
-    try {
-      // make the directory!
-      await Deno.mkdir(filepath, { recursive: true });
-    } catch (err) {
-      console.log(`Unable to create directory ${filepath}`);
-      throw err;
-    }
-  };
-
-  await ignoreNotFound(isDirectoryCheck, makeDirectory);
-}
-
-
 
   /**
    * Essentially a modified copy of
