@@ -17,25 +17,14 @@
 import * as FileSystem from './file_system.ts';
 import DockerfileTemplate from "./templates/mustache/dockerfile.ts";
 import dockerComposeYmlTemplate from "./templates/yaml/docker_compose.yml.ts";
+import appDevelopmentEnvTemplate from "./templates/simple_pairs/app_development_env.ts";
+import { Render } from "./templates/rendering.ts";
 
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 
-const appDevelopmentEnvFile = "./.env/development/app";
-
 const encoder = new TextEncoder();
 
-type Render = typeof renderEmpty; //() => Promise<string>;
-
-const renderEmpty = async () => {
-  return new Promise<string>((resolve) => resolve(""));
-};
-
 let dockerfileTemplate: DockerfileTemplate;
-
-const appDevelopmentEnvTemplate = {
-  filepath: appDevelopmentEnvFile,
-  renderContents: renderEmpty,
-};
 
 async function createFileWithPath(
   fileWithPath: string,
