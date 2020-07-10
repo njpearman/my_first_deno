@@ -1,8 +1,8 @@
 import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/mustache.mjs";
 
-class TemplateError extends Deno.errors.NotFound {
+class MustacheTemplateError extends Deno.errors.NotFound {
   constructor(templateName: string, cause: Error) {
-    super(`Unable to read template ${templateName}. Underlying error: ${cause}`);
+    super(`Unable to read mustache template ${templateName}. Underlying error: ${cause}`);
   }
 }
 
@@ -24,7 +24,7 @@ const renderMustacheTemplate = async (
     try {
       return Mustache.render(template, values);
     } catch (err) {
-      throw new TemplateError(templateName, err);
+      throw new MustacheTemplateError(templateName, err);
     }
 };
 
