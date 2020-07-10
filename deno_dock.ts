@@ -14,34 +14,21 @@
  * Let's start with that.
  **/
 
-import DockerfileTemplate from "./templates/mustache/dockerfile.mustache.ts";
+import * as FileSystem from './file_system.ts';
+import DockerfileTemplate from "./templates/mustache/dockerfile.ts";
 import dockerComposeYmlTemplate from "./templates/yaml/docker_compose.yml.ts";
 
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
 
 const appDevelopmentEnvFile = "./.env/development/app";
+
 const encoder = new TextEncoder();
 
-const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
-
-async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
-  try {
-    await fileSystemOperation();
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      await onNotFound();
-    } else {
-      console.log(`Error ignoring not found: ${error}`);
-      throw error;
-    }
-  }
-}
+type Render = typeof renderEmpty; //() => Promise<string>;
 
 const renderEmpty = async () => {
   return new Promise<string>((resolve) => resolve(""));
 };
-
-type Render = typeof renderEmpty; //() => Promise<string>;
 
 let dockerfileTemplate: DockerfileTemplate;
 
@@ -49,29 +36,6 @@ const appDevelopmentEnvTemplate = {
   filepath: appDevelopmentEnvFile,
   renderContents: renderEmpty,
 };
-
-async function ensureDirectoryExists(filepath: string) {
-  const isDirectoryCheck = async () => {
-    const info = Deno.lstat(filepath);
-
-    if (!(await info).isDirectory) {
-      // we have a problem
-      throw new Error(`Expected ${filepath} to be a directory`);
-    }
-  };
-
-  const makeDirectory = async () => {
-    try {
-      // make the directory!
-      await Deno.mkdir(filepath, { recursive: true });
-    } catch (err) {
-      console.log(`Unable to create directory ${filepath}`);
-      throw err;
-    }
-  };
-
-  await ignoreNotFound(isDirectoryCheck, makeDirectory);
-}
 
 async function createFileWithPath(
   fileWithPath: string,
@@ -83,27 +47,7 @@ async function createFileWithPath(
 
   // This is hardcoded for nixy paths and needs to be made more cleverer.
   if (filepath.length > 0 && filepath !== "./") {
-    await ensureDirectoryExists(filepath);
-  }
-
-  /**
-   * Essentially a modified copy of
-   * [std/fs/exists.ts](https://github.com/denoland/deno/blob/v1.1.2/std/fs/exists.ts).
-   * I'm using my own implementation because, at the time of writing, I'd prefer to have control over any 
-   * specifics I might need rather than importing a small function that might make things harder for me to
-   * understand or implement.
-   */
-  const fileExists = async () => {
-    // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
-    // the symlink itself
-    const fileInfo = await Deno.lstat(fileWithPath);
-
-    if (!fileInfo.isFile) {
-      console.log(`Expected ${fileWithPath} to be a file; found a directory`);
-    } else {
-      console.log(`Found existing ${filename}`);
-      // halt if found?
-    }
+    await FileSystem.ensureDirectoryExists(filepath);
   }
 
   const render = async () => {
@@ -111,7 +55,7 @@ async function createFileWithPath(
     await Deno.writeFile(`${filepath}${filename}`, encodedContents);
   }
 
-  await ignoreNotFound(fileExists, render);
+  await FileSystem.ignoreNotFound(() => FileSystem.fileExists(fileWithPath, filename), render);
 }
 
 async function initDocker() {
@@ -163,11 +107,6 @@ const commandForNew = new Command()
     initDocker();
   });
 
-async function removeWithLogging(fileSystemObject: string, options: any = {}) {
-  await Deno.remove(fileSystemObject, options);
-  console.log(`Removed ${fileSystemObject}`);
-}
-
 const commandForPurge = new Command()
   .option('-f --force [force:boolean]', 'Performs purge. Command will error if -f is not included')
   .action(async ({ force }: any) => {
@@ -181,11 +120,11 @@ const commandForPurge = new Command()
     const dockerDirectories = [".env"];
 
     for (const file of dockerFiles) {
-      ignoreNotFound(() => removeWithLogging(file));
+      FileSystem.ignoreNotFound(() => FileSystem.removeWithLogging(file));
     }
 
     for (const directory of dockerDirectories) {
-      ignoreNotFound(() => removeWithLogging(directory, { recursive: true }));
+      FileSystem.ignoreNotFound(() => FileSystem.removeWithLogging(directory, { recursive: true }));
     }
   });
 
