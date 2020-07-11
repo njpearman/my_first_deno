@@ -17,14 +17,16 @@ const templater = {
             ".:/app",
           ],
           env_file: [
-            ".env/development/app"
+            ".env/development/app",
           ],
-        }
-      }
+        },
+      },
     };
 
     // do the YAML
-    return new Promise<string>((resolve) => resolve(stringify(composeAsObject)));
+    return new Promise<string>((resolve) =>
+      resolve(stringify(composeAsObject))
+    );
   },
 };
 

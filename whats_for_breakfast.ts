@@ -26,11 +26,14 @@ class BreakfastReader {
    * This should be a private function / method for the class. It extracts the looped routine that reads a 
    * specified number of bytes from the provided stream.
    **/
-  async bufferInputStream(inStream: Deno.Reader, bufferSize: number): Promise<ReadResult> {
+  async bufferInputStream(
+    inStream: Deno.Reader,
+    bufferSize: number,
+  ): Promise<ReadResult> {
     const buffer = new Uint8Array(bufferSize); // Array of unsigned 8 bit integers. But why 20?
-    const readCount = await inStream.read(buffer); // Read from stdin into the buffer asynchronously, recording the 
-                                             // number of bytes read afterwards
-    if(readCount === null || readCount === 0) {
+    const readCount = await inStream.read(buffer); // Read from stdin into the buffer asynchronously, recording the
+    // number of bytes read afterwards
+    if (readCount === null || readCount === 0) {
       // No bytes were read, so break from the loop
       return new InputEnd();
     }
@@ -38,7 +41,9 @@ class BreakfastReader {
     const indexOfNewLine = buffer.indexOf(NEW_LINE_AS_BYTE);
 
     if (indexOfNewLine > -1) {
-      return new InputEnd(this.#decoder.decode(buffer.slice(0, indexOfNewLine)));
+      return new InputEnd(
+        this.#decoder.decode(buffer.slice(0, indexOfNewLine)),
+      );
     } else {
       return new Input(this.#decoder.decode(buffer));
     }
@@ -54,15 +59,15 @@ class BreakfastReader {
     const inStream = Deno.stdin; // the input stream, stdin
 
     while (true) {
-      const result = await this.bufferInputStream(inStream, 20)
-      breakfast.push(result.fragment); 
+      const result = await this.bufferInputStream(inStream, 20);
+      breakfast.push(result.fragment);
 
       if (result instanceof InputEnd) {
         break;
       }
     }
 
-    return breakfast.join('');
+    return breakfast.join("");
   }
 }
 

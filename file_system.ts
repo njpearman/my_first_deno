@@ -1,6 +1,6 @@
-const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
+const onNotFoundDefault = () => new Promise<string>((resolve) => resolve(""));
 
-class NotFound { }
+class NotFound {}
 
 async function isDirectoryCheck(filepath: string) {
   const info = Deno.lstat(filepath);
@@ -9,7 +9,7 @@ async function isDirectoryCheck(filepath: string) {
     // we have a problem
     throw new Error(`Expected ${filepath} to be a directory`);
   }
-};
+}
 
 async function makeDirectory(filepath: string) {
   try {
@@ -19,14 +19,16 @@ async function makeDirectory(filepath: string) {
     console.log(`Unable to create directory ${filepath}`);
     throw err;
   }
-};
+}
 
-async function ignoreNotFound<T>(fileSystemOperation: () => Promise<T>): Promise<T | NotFound> {
+async function ignoreNotFound<T>(
+  fileSystemOperation: () => Promise<T>,
+): Promise<T | NotFound> {
   try {
     return await fileSystemOperation();
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      return new Promise(resolve => resolve(new NotFound()));
+      return new Promise((resolve) => resolve(new NotFound()));
     } else {
       console.log(`Error ignoring not found: ${error}`);
       throw error;
@@ -39,12 +41,15 @@ export async function ensureDirectoryExists(filepath: string) {
   await makeDirectory(filepath);
 }
 
-export async function removeWithLogging(fileSystemObject: string, options: any = {}) {
+export async function removeWithLogging(
+  fileSystemObject: string,
+  options: any = {},
+) {
   ignoreNotFound(() => Deno.remove(fileSystemObject, options));
   console.log(`Removed ${fileSystemObject}`);
 }
 
-  /**
+/**
    * Essentially a modified copy of
    * [std/fs/exists.ts](https://github.com/denoland/deno/blob/v1.1.2/std/fs/exists.ts).
    * I'm using my own implementation because, at the time of writing, I'd prefer to have control over any 
@@ -54,7 +59,9 @@ export async function removeWithLogging(fileSystemObject: string, options: any =
 export async function fileExists(fileWithPath: string) {
   // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
   // the symlink itself
-  const fileInfoOrNotFound = await ignoreNotFound(() => Deno.lstat(fileWithPath));
+  const fileInfoOrNotFound = await ignoreNotFound(() =>
+    Deno.lstat(fileWithPath)
+  );
 
   if (fileInfoOrNotFound instanceof NotFound) {
     console.log(`Found existing ${fileWithPath}`);

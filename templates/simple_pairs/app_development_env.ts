@@ -8,5 +8,3 @@ const appDevelopmentEnvTemplate = {
 };
 
 export default appDevelopmentEnvTemplate;
-
-

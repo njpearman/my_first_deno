@@ -8,8 +8,8 @@ function trees(context: Context) {
       { name: "Oak" },
       { name: "Silver Birch" },
       { name: "Fir" },
-    ]
-  }
+    ],
+  };
 }
 
 function dinosaurs(context: Context) {
@@ -19,8 +19,8 @@ function dinosaurs(context: Context) {
       { name: "Stegosaurus" },
       { name: "Diplodocus" },
       { name: "Triceratops" },
-    ]
-  }
+    ],
+  };
 }
 
 function root(context: Context) {
@@ -31,11 +31,10 @@ router
   .get("/", root)
   .get("/trees", trees)
   .get("/dinosaurs", dinosaurs);
-  
+
 const app = new Application();
 
 app.use(router.routes());
 app.use(router.allowedMethods()); // Why does the doc example include this?
 
 await app.listen({ port: 4604 }); // 4604 == 'acorn', n'est pas?
-

@@ -14,7 +14,7 @@
  * Let's start with that.
  **/
 
-import * as FileSystem from './file_system.ts';
+import * as FileSystem from "./file_system.ts";
 import DockerfileTemplate from "./templates/mustache/dockerfile.ts";
 import dockerComposeYmlTemplate from "./templates/yaml/docker_compose.yml.ts";
 import appDevelopmentEnvTemplate from "./templates/simple_pairs/app_development_env.ts";
@@ -42,9 +42,9 @@ async function createFileWithPath(
   const render = async () => {
     const encodedContents = encoder.encode(await renderContents());
     await Deno.writeFile(`${filepath}${filename}`, encodedContents);
-  }
+  };
 
-  await FileSystem.fileExists(fileWithPath)
+  await FileSystem.fileExists(fileWithPath);
   await render();
 }
 
@@ -85,7 +85,10 @@ async function initDocker() {
 
 const commandForNew = new Command()
   .arguments("<file>")
-  .option("-a, --allows <allows:string[]>", "comma separated list of Deno permissions. Use the Deno run allow you want, minus `--allow-`")
+  .option(
+    "-a, --allows <allows:string[]>",
+    "comma separated list of Deno permissions. Use the Deno run allow you want, minus `--allow-`",
+  )
   .action((options: { allows: string[] }, file: string) => {
     console.log(`Running new command with ${file}`);
     console.log(`Docker will allow: ${options.allows}`);
@@ -98,10 +101,15 @@ const commandForNew = new Command()
   });
 
 const commandForPurge = new Command()
-  .option('-f --force [force:boolean]', 'Performs purge. Command will error if -f is not included')
+  .option(
+    "-f --force [force:boolean]",
+    "Performs purge. Command will error if -f is not included",
+  )
   .action(async ({ force }: any) => {
     if (!force) {
-      console.log("Purge destroys all Docker files. You must use --force to perform a purge. No files have been removed.");
+      console.log(
+        "Purge destroys all Docker files. You must use --force to perform a purge. No files have been removed.",
+      );
       Deno.exit(2);
     }
 
@@ -124,7 +132,7 @@ const commandForAddPostgres = new Command()
     if (!(await FileSystem.fileExists("docker-compose.yml"))) {
       //   exit as no file
     }
-    
+
     // read YAML
     // check if database service already exists
     //   exit if already defined

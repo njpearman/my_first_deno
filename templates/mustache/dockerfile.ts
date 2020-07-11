@@ -2,10 +2,11 @@ import Mustache from "https://raw.githubusercontent.com/janl/mustache.js/v4.0.1/
 
 class MustacheTemplateError extends Deno.errors.NotFound {
   constructor(templateName: string, cause: Error) {
-    super(`Unable to read mustache template ${templateName}. Underlying error: ${cause}`);
+    super(
+      `Unable to read mustache template ${templateName}. Underlying error: ${cause}`,
+    );
   }
 }
-
 
 /**
  * Using `Mustache` here produces a TS error in Vim:
@@ -21,17 +22,21 @@ const renderMustacheTemplate = async (
   templateName: string,
   values: object = {},
 ) => {
-    try {
-      return Mustache.render(template, values);
-    } catch (err) {
-      throw new MustacheTemplateError(templateName, err);
-    }
+  try {
+    return Mustache.render(template, values);
+  } catch (err) {
+    throw new MustacheTemplateError(templateName, err);
+  }
 };
 
 class DockerfileTemplate {
   #scriptName: string;
   #allows: string[];
-  constructor(scriptName: string, allows: string[] = [], public filepath: string = "./Dockerfile") {
+  constructor(
+    scriptName: string,
+    allows: string[] = [],
+    public filepath: string = "./Dockerfile",
+  ) {
     this.#scriptName = scriptName;
     this.#allows = allows;
     this.renderContents = this.renderContents.bind(this);
@@ -39,9 +44,13 @@ class DockerfileTemplate {
 
   renderContents() {
     console.log(`allows are: ${this.#allows.join(";")}`);
-    let values: { scriptName: string, allows?: string } = { scriptName: this.#scriptName };
+    let values: { scriptName: string; allows?: string } = {
+      scriptName: this.#scriptName,
+    };
     if (this.#allows.length > 0) {
-      values.allows = this.#allows.map(allow => `"--allow-${allow}"`).join(", ") + ", ";
+      values.allows = this.#allows.map((allow) =>
+        `"--allow-${allow}"`
+      ).join(", ") + ", ";
     }
     return renderMustacheTemplate(
       Template,
@@ -66,4 +75,3 @@ RUN deno cache {{scriptName}}
 CMD ["run", {{&allows}} "{{scriptName}}"]`;
 
 export default DockerfileTemplate;
-
