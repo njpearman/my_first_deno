@@ -48,7 +48,7 @@ export async function removeWithLogging(fileSystemObject: string, options: any =
    * specifics I might need rather than importing a small function that might make things harder for me to
    * understand or implement.
    */
-export async function fileExists(fileWithPath: string, filename: string) {
+export async function fileExists(fileWithPath: string) {
   // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
   // the symlink itself
   const fileInfo = await Deno.lstat(fileWithPath);
@@ -56,8 +56,7 @@ export async function fileExists(fileWithPath: string, filename: string) {
   if (!fileInfo.isFile) {
     console.log(`Expected ${fileWithPath} to be a file; found a directory`);
   } else {
-    console.log(`Found existing ${filename}`);
-    // halt if found?
+    console.log(`Found existing ${fileWithPath}`);
+    return true;
   }
 }
-

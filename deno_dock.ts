@@ -44,7 +44,7 @@ async function createFileWithPath(
     await Deno.writeFile(`${filepath}${filename}`, encodedContents);
   }
 
-  await FileSystem.ignoreNotFound(() => FileSystem.fileExists(fileWithPath, filename), render);
+  await FileSystem.ignoreNotFound(() => FileSystem.fileExists(fileWithPath), render);
 }
 
 async function initDocker() {
@@ -115,6 +115,28 @@ const commandForPurge = new Command()
     for (const directory of dockerDirectories) {
       FileSystem.ignoreNotFound(() => FileSystem.removeWithLogging(directory, { recursive: true }));
     }
+  });
+
+commandForAddPostgres = new Command()
+  .action(async () => {
+    // check for docker-compose.yml
+    if (!(await FileSystem.fileExists("docker-compose.yml"))) {
+      //   exit as no file
+    }
+    
+    // read YAML
+    // check if database service already exists
+    //   exit if already defined
+    // check if .env/development/database env file exists
+    //   read .env/development/database file if already exists
+    //   check if settings are present
+    //     exit if settings are present
+    // create .env/development/database if file does not exists
+    // add env settings for database
+    // define database service as object
+    // add service to YAML
+    // stringify the extended YAML
+    // write new contents for docker-compose.yml
   });
 
 await new Command()
