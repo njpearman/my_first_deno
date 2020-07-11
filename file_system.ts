@@ -62,9 +62,11 @@ export async function fileExists(fileWithPath: string) {
   );
 
   if (fileInfoOrNotFound instanceof NotFound) {
-    console.log(`Found existing ${fileWithPath}`);
-    return true;
+    return false;
   } else if (!fileInfoOrNotFound.isFile) {
     console.log(`Expected ${fileWithPath} to be a file; found a directory`);
   }
+
+  console.log(`Found existing ${fileWithPath}`);
+  return true;
 }

@@ -21,6 +21,7 @@ import appDevelopmentEnvTemplate from "./templates/simple_pairs/app_development_
 import { Render } from "./templates/rendering.ts";
 
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
+import { parse } from "https://deno.land/std/encoding/yaml.ts";
 
 const encoder = new TextEncoder();
 
@@ -126,14 +127,34 @@ const commandForPurge = new Command()
     }
   });
 
+class DockerCompose {
+  constructor(public version: string, public services: { web: any, database?: any }) {}
+}
+
 const commandForAddPostgres = new Command()
   .action(async () => {
     // check for docker-compose.yml
-    if (!(await FileSystem.fileExists("docker-compose.yml"))) {
-      //   exit as no file
+    if (!(await FileSystem.fileExists("./docker-compose.yml"))) {
+      console.log("No docker-compose.yml file found. Do you need to run `deno new`?");
+      Deno.exit(3);
     }
 
     // read YAML
+    const yamlString = new TextDecoder().decode(await Deno.readFile("docker-compose.yml"));
+    const dockerCompose: any = parse(yamlString);
+    if (!dockerCompose.version ||
+        !dockerCompose.services?.web) {
+      console.log(`docker-compose.yml has an unexpected structure. Expected to match \n{ version, services: { web. database? }\n but got:`);
+      console.log(dockerCompose);
+      Deno.exit(4);
+    }
+
+    if (dockerCompose.services.database) {
+      console.log(`docker-compose.yml already contains a database service:\n${dockerCompose.services.database}`);
+      Deno.exit(5);
+    }
+
+    console.log("docker-compose.yml is as expected");
     // check if database service already exists
     //   exit if already defined
     // check if .env/development/database env file exists
@@ -155,5 +176,6 @@ await new Command()
     "Simple set up for a simple Docker environment for a Deno project",
   )
   .command("new", commandForNew)
+  .command("add_pg", commandForAddPostgres)
   .command("purge", commandForPurge)
   .parse(Deno.args);
