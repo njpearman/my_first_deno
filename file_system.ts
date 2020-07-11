@@ -1,5 +1,7 @@
 const onNotFoundDefault = () => new Promise<string>(resolve => resolve(""));
 
+class NotFound { }
+
 async function isDirectoryCheck(filepath: string) {
   const info = Deno.lstat(filepath);
 
@@ -19,16 +21,12 @@ async function makeDirectory(filepath: string) {
   }
 };
 
-export async function ensureDirectoryExists(filepath: string) {
-  await ignoreNotFound(() => isDirectoryCheck(filepath), () => makeDirectory(filepath));
-}
-
-export async function ignoreNotFound(fileSystemOperation: () => Promise<any>, onNotFound: () => Promise<any> = onNotFoundDefault) {
+async function ignoreNotFound<T>(fileSystemOperation: () => Promise<T>): Promise<T | NotFound> {
   try {
-    await fileSystemOperation();
+    return await fileSystemOperation();
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      await onNotFound();
+      return new Promise(resolve => resolve(new NotFound()));
     } else {
       console.log(`Error ignoring not found: ${error}`);
       throw error;
@@ -36,8 +34,13 @@ export async function ignoreNotFound(fileSystemOperation: () => Promise<any>, on
   }
 }
 
+export async function ensureDirectoryExists(filepath: string) {
+  await ignoreNotFound(() => isDirectoryCheck(filepath));
+  await makeDirectory(filepath);
+}
+
 export async function removeWithLogging(fileSystemObject: string, options: any = {}) {
-  await Deno.remove(fileSystemObject, options);
+  ignoreNotFound(() => Deno.remove(fileSystemObject, options));
   console.log(`Removed ${fileSystemObject}`);
 }
 
@@ -51,12 +54,12 @@ export async function removeWithLogging(fileSystemObject: string, options: any =
 export async function fileExists(fileWithPath: string) {
   // for my reference, lstat gets info about the symlink source, i.e. the original file/dir, rather than
   // the symlink itself
-  const fileInfo = await Deno.lstat(fileWithPath);
+  const fileInfoOrNotFound = await ignoreNotFound(() => Deno.lstat(fileWithPath));
 
-  if (!fileInfo.isFile) {
-    console.log(`Expected ${fileWithPath} to be a file; found a directory`);
-  } else {
+  if (fileInfoOrNotFound instanceof NotFound) {
     console.log(`Found existing ${fileWithPath}`);
     return true;
+  } else if (!fileInfoOrNotFound.isFile) {
+    console.log(`Expected ${fileWithPath} to be a file; found a directory`);
   }
 }

@@ -44,7 +44,8 @@ async function createFileWithPath(
     await Deno.writeFile(`${filepath}${filename}`, encodedContents);
   }
 
-  await FileSystem.ignoreNotFound(() => FileSystem.fileExists(fileWithPath), render);
+  await FileSystem.fileExists(fileWithPath)
+  await render();
 }
 
 async function initDocker() {
@@ -109,15 +110,15 @@ const commandForPurge = new Command()
     const dockerDirectories = [".env"];
 
     for (const file of dockerFiles) {
-      FileSystem.ignoreNotFound(() => FileSystem.removeWithLogging(file));
+      FileSystem.removeWithLogging(file);
     }
 
     for (const directory of dockerDirectories) {
-      FileSystem.ignoreNotFound(() => FileSystem.removeWithLogging(directory, { recursive: true }));
+      FileSystem.removeWithLogging(directory, { recursive: true });
     }
   });
 
-commandForAddPostgres = new Command()
+const commandForAddPostgres = new Command()
   .action(async () => {
     // check for docker-compose.yml
     if (!(await FileSystem.fileExists("docker-compose.yml"))) {
