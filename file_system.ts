@@ -1,5 +1,3 @@
-const onNotFoundDefault = () => new Promise<string>((resolve) => resolve(""));
-
 class NotFound {}
 
 async function isDirectoryCheck(filepath: string) {
