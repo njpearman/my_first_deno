@@ -19,9 +19,9 @@ import DockerfileTemplate from "./templates/mustache/dockerfile.ts";
 import dockerComposeYmlTemplate from "./templates/yaml/docker_compose.yml.ts";
 import appDevelopmentEnvTemplate from "./templates/simple_pairs/app_development_env.ts";
 import { Render } from "./templates/rendering.ts";
-
+import commandForAddPostgres from "./commands/add_postgres.ts";
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
-import { parse } from "https://deno.land/std/encoding/yaml.ts";
+import { parse, stringify } from "https://deno.land/std/encoding/yaml.ts";
 
 const encoder = new TextEncoder();
 
@@ -125,48 +125,6 @@ const commandForPurge = new Command()
     for (const directory of dockerDirectories) {
       FileSystem.removeWithLogging(directory, { recursive: true });
     }
-  });
-
-class DockerCompose {
-  constructor(public version: string, public services: { web: any, database?: any }) {}
-}
-
-const commandForAddPostgres = new Command()
-  .action(async () => {
-    // check for docker-compose.yml
-    if (!(await FileSystem.fileExists("./docker-compose.yml"))) {
-      console.log("No docker-compose.yml file found. Do you need to run `deno new`?");
-      Deno.exit(3);
-    }
-
-    // read YAML
-    const yamlString = new TextDecoder().decode(await Deno.readFile("docker-compose.yml"));
-    const dockerCompose: any = parse(yamlString);
-    if (!dockerCompose.version ||
-        !dockerCompose.services?.web) {
-      console.log(`docker-compose.yml has an unexpected structure. Expected to match \n{ version, services: { web. database? }\n but got:`);
-      console.log(dockerCompose);
-      Deno.exit(4);
-    }
-
-    if (dockerCompose.services.database) {
-      console.log(`docker-compose.yml already contains a database service:\n${dockerCompose.services.database}`);
-      Deno.exit(5);
-    }
-
-    console.log("docker-compose.yml is as expected");
-    // check if database service already exists
-    //   exit if already defined
-    // check if .env/development/database env file exists
-    //   read .env/development/database file if already exists
-    //   check if settings are present
-    //     exit if settings are present
-    // create .env/development/database if file does not exists
-    // add env settings for database
-    // define database service as object
-    // add service to YAML
-    // stringify the extended YAML
-    // write new contents for docker-compose.yml
   });
 
 await new Command()
