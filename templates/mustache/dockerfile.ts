@@ -64,11 +64,11 @@ const Template = `FROM hayd/alpine-deno:1.1.1
 
 USER deno
 
-ENV DENO_INSTALL_ROOT "/home/deno/.deno/bin"
+ENV DENO_INSTALL_ROOT "/home/deno/.deno"
 ENV DENO_DIR "/home/deno/.module_cache"
 RUN mkdir -p $DENO_INSTALL_ROOT $DENO_DIR
 
-ENV PATH "$DENO_INSTALL_ROOT:$PATH"
+ENV PATH "$DENO_INSTALL_ROOT/bin:$PATH"
 
 EXPOSE 4604
 
