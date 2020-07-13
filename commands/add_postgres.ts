@@ -74,6 +74,9 @@ const command = new Command()
 
     dockerCompose.services.database = {
       image: "postgres",
+      ports: [
+        '5432:5432',
+      ],
       env_file: [
         ".env/development/database",
       ],
