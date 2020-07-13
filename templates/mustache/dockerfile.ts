@@ -78,6 +78,8 @@ ADD . .
 
 RUN deno cache {{scriptName}}
 
-CMD ["run", {{&allows}} "{{scriptName}}"]`;
+ENTRYPOINT []
+
+CMD ["deno", "run", {{&allows}} "{{scriptName}}"]`;
 
 export default DockerfileTemplate;
