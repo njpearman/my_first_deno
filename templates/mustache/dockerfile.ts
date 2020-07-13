@@ -60,7 +60,13 @@ class DockerfileTemplate {
   }
 }
 
-const Template = ` FROM hayd/alpine-deno:1.1.1
+const Template = `FROM hayd/alpine-deno:1.1.1
+
+ENV DENO_INSTALL_ROOT "/home/deno/.deno/bin"
+ENV DENO_DIR "/home/deno/.module_cache"
+RUN mkdir -p $DENO_INSTALL_ROOT $DENO_DIR
+
+ENV PATH "$DENO_INSTALL_ROOT:$PATH"
 
 EXPOSE 4604
 

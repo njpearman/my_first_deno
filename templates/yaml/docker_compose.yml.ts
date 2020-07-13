@@ -15,12 +15,16 @@ const templater = {
           ],
           volumes: [
             ".:/app",
+            "deno_cache:/home/deno/.module_cache",
           ],
           env_file: [
             ".env/development/app",
           ],
         },
       },
+      volumes: [
+        "deno_cache:"
+      ]
     };
 
     // do the YAML

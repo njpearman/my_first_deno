@@ -21,7 +21,6 @@ import appDevelopmentEnvTemplate from "./templates/simple_pairs/app_development_
 import { Render } from "./templates/rendering.ts";
 import commandForAddPostgres from "./commands/add_postgres.ts";
 import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
-import { parse, stringify } from "https://deno.land/std/encoding/yaml.ts";
 
 const encoder = new TextEncoder();
 
