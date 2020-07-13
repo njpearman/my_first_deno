@@ -22,9 +22,9 @@ const templater = {
           ],
         },
       },
-      volumes: [
-        "deno_cache:"
-      ]
+      volumes: {
+        deno_cache: null
+      }
     };
 
     // do the YAML
