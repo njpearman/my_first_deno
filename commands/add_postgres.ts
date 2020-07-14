@@ -63,7 +63,7 @@ const command = new Command()
     }
 
     const fileContents = encoder.encode(
-      "POSTGRES_USER=deno\nPOSTGRES_PASSWORD=password\nPOSTGRES_DB=deno",
+      "POSTGRES_USER=deno\nPOSTGRES_PASSWORD=password\nPOSTGRES_DB=deno\nPOSTGRES_HOST=database",
     );
     await Deno.writeFile("./.env/development/database", fileContents);
 
@@ -87,13 +87,9 @@ const command = new Command()
       "./docker-compose.yml",
       encoder.encode(newDockerCompose),
     );
-    // add env settings for database
-    // define database service as object
-    // add service to YAML
-    // add .env/development/database as env_file for web
-    // stringify the extended YAML
-    // write new contents for docker-compose.yml
-    console.log("docker-compose.yml is as expected");
+
+    console.log("Finished adding database service to docker-compose.yml");
+    console.log(newDockerCompose);
   });
 
 export default command;
