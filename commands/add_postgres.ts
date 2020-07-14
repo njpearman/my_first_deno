@@ -4,6 +4,7 @@ import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod
 import * as FileSystem from "./../file_system.ts";
 
 const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 const command = new Command()
   .throwErrors()
@@ -17,7 +18,7 @@ const command = new Command()
     }
 
     // read YAML
-    const yamlString = new TextDecoder().decode(
+    const yamlString = decoder.decode(
       await Deno.readFile("./docker-compose.yml"),
     );
     const dockerCompose: any = parse(yamlString);
