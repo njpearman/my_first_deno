@@ -3,6 +3,8 @@ import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod
 
 import * as FileSystem from "./../file_system.ts";
 
+const dockerComposeFilePath = "./docker-compose.yml";
+const databaseEnvFilePath = "./.env/development/database";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -10,7 +12,7 @@ const command = new Command()
   .throwErrors()
   .action(async () => {
     // check for docker-compose.yml
-    if (!(await FileSystem.fileExists("./docker-compose.yml"))) {
+    if (!(await FileSystem.fileExists(dockerComposeFilePath))) {
       console.log(
         "No docker-compose.yml file found. Do you need to run `deno new`?",
       );
@@ -19,7 +21,7 @@ const command = new Command()
 
     // read YAML
     const yamlString = decoder.decode(
-      await Deno.readFile("./docker-compose.yml"),
+      await Deno.readFile(dockerComposeFilePath),
     );
     const dockerCompose: any = parse(yamlString);
     if (
@@ -40,7 +42,7 @@ const command = new Command()
       Deno.exit(5);
     }
 
-    if (await FileSystem.fileExists("./.env/development/database")) {
+    if (await FileSystem.fileExists(databaseEnvFilePath)) {
       const databaseDevEnv = new TextDecoder().decode(
         await Deno.readFile("./.env/development/database"),
       );
@@ -66,11 +68,11 @@ const command = new Command()
     const fileContents = encoder.encode(
       "POSTGRES_USER=deno\nPOSTGRES_PASSWORD=password\nPOSTGRES_DB=deno\nPOSTGRES_HOST=database",
     );
-    await Deno.writeFile("./.env/development/database", fileContents);
+    await Deno.writeFile(databaseEnvFilePath, fileContents);
 
     dockerCompose.services.web.env_file = [
       ...dockerCompose.services.web.env_file,
-      ".env/development/database",
+      databaseEnvFilePath,
     ];
 
     dockerCompose.services.database = {
@@ -79,13 +81,13 @@ const command = new Command()
         '5432:5432',
       ],
       env_file: [
-        ".env/development/database",
+        databaseEnvFilePath,
       ],
     };
 
     const newDockerCompose = stringify(dockerCompose);
     await Deno.writeFile(
-      "./docker-compose.yml",
+      dockerComposeFilePath,
       encoder.encode(newDockerCompose),
     );
 
