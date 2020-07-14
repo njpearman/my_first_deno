@@ -8,14 +8,11 @@ import { Render } from "./../templates/rendering.ts";
 
 const encoder = new TextEncoder();
 
-let dockerfileTemplate: DockerfileTemplate;
-
 async function createFileWithPath(
   fileWithPath: string,
   renderContents: Render,
 ) {
   const filenameStartIndex = fileWithPath.lastIndexOf("/") + 1;
-  const filename = fileWithPath.slice(filenameStartIndex);
   const filepath = fileWithPath.slice(0, filenameStartIndex);
 
   // This is hardcoded for nixy paths and needs to be made more cleverer.
@@ -25,14 +22,14 @@ async function createFileWithPath(
 
   const render = async () => {
     const encodedContents = encoder.encode(await renderContents());
-    await Deno.writeFile(`${filepath}${filename}`, encodedContents);
+    await Deno.writeFile(fileWithPath, encodedContents);
   };
 
   await FileSystem.fileExists(fileWithPath);
   await render();
 }
 
-async function initDocker() {
+async function initDocker(dockerfileTemplate: DockerfileTemplate) {
   // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
   // that this is the way to do it.
   const templates = {
@@ -75,13 +72,13 @@ const command = new Command()
   )
   .action((options: { allows: string[] }, file: string) => {
     console.log(`Running new command with ${file}`);
-    console.log(`Docker will allow: ${options.allows}`);
     if (options.allows) {
-      dockerfileTemplate = new DockerfileTemplate(file, options.allows);
+      console.log(`Docker will allow: ${options.allows}`);
+      initDocker(new DockerfileTemplate(file, options.allows));
     } else {
-      dockerfileTemplate = new DockerfileTemplate(file);
+      console.log("Docker will allow nothing in Deno script");
+      initDocker(new DockerfileTemplate(file));
     }
-    initDocker();
   });
 
 export default command;
