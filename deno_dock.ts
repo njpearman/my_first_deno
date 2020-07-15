@@ -1,4 +1,4 @@
-import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
+import { Command } from "./deps.ts";
 
 import commandForAddPostgres from "./commands/add_postgres.ts";
 import commandForNew from "./commands/new.ts";

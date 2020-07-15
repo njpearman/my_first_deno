@@ -1,5 +1,4 @@
-import { parse, stringify } from "https://deno.land/std/encoding/yaml.ts";
-import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
+import { Command, parse, stringify } from "../deps.ts";
 
 import * as FileSystem from "./../file_system.ts";
 

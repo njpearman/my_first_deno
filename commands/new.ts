@@ -1,4 +1,4 @@
-import { Command } from "https://deno.land/x/cliffy@v0.10.0/packages/command/mod.ts";
+import { Command } from "../deps.ts";
 
 import dockerComposeYmlTemplate from "./../templates/yaml/docker_compose.yml.ts";
 import appDevelopmentEnvTemplate from "./../templates/simple_pairs/app_development_env.ts";

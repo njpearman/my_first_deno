@@ -1,4 +1,4 @@
-import { stringify } from "https://deno.land/std/encoding/yaml.ts";
+import { stringify } from "../../deps";
 
 const outputFile = "./docker-compose.yml";
 
