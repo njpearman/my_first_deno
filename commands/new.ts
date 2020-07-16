@@ -3,6 +3,8 @@ import { Command } from "../deps.ts";
 import dockerComposeYmlTemplate from "./../templates/yaml/docker_compose.yml.ts";
 import appDevelopmentEnvTemplate from "./../templates/simple_pairs/app_development_env.ts";
 import DockerfileTemplate from "./../templates/mustache/dockerfile.ts";
+import ModTsTemplate from "./../templates/mustache/modTs.ts";
+import DepTsTemplate from "./../templates/mustache/depsTs.ts";
 import * as FileSystem from "./../file_system.ts";
 import { Render } from "./../templates/rendering.ts";
 
@@ -29,7 +31,7 @@ async function createFileWithPath(
   await render();
 }
 
-async function initDocker(dockerfileTemplate: DockerfileTemplate) {
+async function initDocker(dockerfileTemplate: DockerfileTemplate, modTsTemplate: ModTsTemplate, depsTsTemplate: DepTsTemplate) {
   // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
   // that this is the way to do it.
   const templates = {
@@ -37,6 +39,8 @@ async function initDocker(dockerfileTemplate: DockerfileTemplate) {
       dockerfileTemplate,
       dockerComposeYmlTemplate,
       appDevelopmentEnvTemplate,
+      depsTsTemplate,
+      modTsTemplate,
     ],
     [Symbol.asyncIterator]() {
       return {
@@ -74,10 +78,10 @@ const command = new Command()
     console.log(`Running new command with ${file}`);
     if (options.allows) {
       console.log(`Docker will allow: ${options.allows}`);
-      initDocker(new DockerfileTemplate(file, options.allows));
+      initDocker(new DockerfileTemplate(file, options.allows), new ModTsTemplate(file, "Stub"), new DepTsTemplate());
     } else {
       console.log("Docker will allow nothing in Deno script");
-      initDocker(new DockerfileTemplate(file));
+      initDocker(new DockerfileTemplate(file), new ModTsTemplate(file, "Stub"), new DepTsTemplate());
     }
   });
 

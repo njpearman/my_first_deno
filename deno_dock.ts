@@ -5,10 +5,10 @@ import commandForNew from "./commands/new.ts";
 import commandForPurge from "./commands/purge.ts";
 
 await new Command()
-  .name("deno_dock")
+  .name("archy")
   .version("0.0.1")
   .description(
-    "Simple set up for a simple Docker environment for a Deno project",
+    "Simple set up for a simple Deno project backed by a Docker environment. Why archy? Archosaurs begat Dinosaurs.",
   )
   .command("new", commandForNew)
   .command("add_pg", commandForAddPostgres)

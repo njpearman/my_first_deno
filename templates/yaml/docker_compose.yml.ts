@@ -1,4 +1,4 @@
-import { stringify } from "../../deps";
+import { stringify } from "../../deps.ts";
 
 const outputFile = "./docker-compose.yml";
 
