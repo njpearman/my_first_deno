@@ -5,6 +5,7 @@ import appDevelopmentEnvTemplate from "./../templates/simple_pairs/app_developme
 import DockerfileTemplate from "./../templates/mustache/dockerfile.ts";
 import ModTsTemplate from "./../templates/mustache/modTs.ts";
 import DepTsTemplate from "./../templates/mustache/depsTs.ts";
+import ScriptTsTemplate from "./../templates/mustache/scriptTs.ts";
 import * as FileSystem from "./../file_system.ts";
 import { Render } from "./../templates/rendering.ts";
 
@@ -31,7 +32,7 @@ async function createFileWithPath(
   await render();
 }
 
-async function initDocker(dockerfileTemplate: DockerfileTemplate, modTsTemplate: ModTsTemplate, depsTsTemplate: DepTsTemplate) {
+async function initDocker(dockerfileTemplate: DockerfileTemplate, modTsTemplate: ModTsTemplate, depsTsTemplate: DepTsTemplate, scriptTsTemplate: ScriptTsTemplate) {
   // Is this necessary..? I understand the benefit of triggering things asynchronously but I doubt
   // that this is the way to do it.
   const templates = {
@@ -41,6 +42,7 @@ async function initDocker(dockerfileTemplate: DockerfileTemplate, modTsTemplate:
       appDevelopmentEnvTemplate,
       depsTsTemplate,
       modTsTemplate,
+      scriptTsTemplate,
     ],
     [Symbol.asyncIterator]() {
       return {
@@ -78,10 +80,10 @@ const command = new Command()
     console.log(`Running new command with ${file}`);
     if (options.allows) {
       console.log(`Docker will allow: ${options.allows}`);
-      initDocker(new DockerfileTemplate(file, options.allows), new ModTsTemplate(file, "Stub"), new DepTsTemplate());
+      initDocker(new DockerfileTemplate(file, options.allows), new ModTsTemplate(file, "Stub"), new DepTsTemplate(), new ScriptTsTemplate(file));
     } else {
       console.log("Docker will allow nothing in Deno script");
-      initDocker(new DockerfileTemplate(file), new ModTsTemplate(file, "Stub"), new DepTsTemplate());
+      initDocker(new DockerfileTemplate(file), new ModTsTemplate(file, "Stub"), new DepTsTemplate(), new ScriptTsTemplate(file));
     }
   });
 
